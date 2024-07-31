@@ -26,7 +26,9 @@
 
 namespace Triangle\Middleware;
 
+use localzet\Server;
 use RuntimeException;
+use Triangle\Engine\Interface\BootstrapInterface;
 use function array_merge;
 use function array_reverse;
 use function is_array;
@@ -36,14 +38,14 @@ use function method_exists;
  * Класс Middleware
  * Этот класс представляет собой контейнер для промежуточного ПО (Middleware).
  */
-class Bootstrap
+class Bootstrap implements BootstrapInterface
 {
     /**
      * @var array Массив экземпляров промежуточного ПО
      */
     protected static array $instances = [];
 
-    public static function start(): void
+    public static function start(?Server $server = null): void
     {
         self::load(config('middleware', []));
         self::load(['__static__' => config('static.middleware', [])]);
