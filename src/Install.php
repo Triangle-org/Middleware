@@ -24,7 +24,7 @@
  *              For any questions, please contact <triangle@localzet.com>
  */
 
-namespace Triangle\View;
+namespace Triangle\Middleware;
 
 /**
  * Класс Install
