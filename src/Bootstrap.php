@@ -47,6 +47,10 @@ class Bootstrap implements BootstrapInterface
 
     public static function start(?Server $server = null): void
     {
+        if (!$server) {
+            return;
+        }
+        
         self::load(config('middleware', []));
         self::load(['__static__' => config('static.middleware', [])]);
 
