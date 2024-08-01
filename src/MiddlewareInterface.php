@@ -26,8 +26,8 @@
 
 namespace Triangle\Middleware;
 
-use Triangle\Engine\Http\Request;
-use Triangle\Engine\Http\Response;
+use Triangle\Http\Request;
+use Triangle\Http\Response;
 
 /**
  * Участник обработки запроса и ответа сервера.

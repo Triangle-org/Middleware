@@ -28,7 +28,7 @@ namespace Triangle\Middleware;
 
 use localzet\Server;
 use RuntimeException;
-use Triangle\Engine\Interface\BootstrapInterface;
+use Triangle\Engine\BootstrapInterface;
 use function array_merge;
 use function array_reverse;
 use function is_array;
@@ -50,7 +50,7 @@ class Bootstrap implements BootstrapInterface
         if (!$server) {
             return;
         }
-        
+
         self::load(config('middleware', []));
         self::load(['__static__' => config('static.middleware', [])]);
 
