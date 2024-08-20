@@ -26,8 +26,9 @@
 
 namespace Triangle\Middleware;
 
-use Triangle\Http\Request;
-use Triangle\Http\Response;
+
+use localzet\Server\Protocols\Http\Request;
+use localzet\Server\Protocols\Http\Response;
 
 /**
  * Участник обработки запроса и ответа сервера.
