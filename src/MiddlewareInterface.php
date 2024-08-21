@@ -27,9 +27,6 @@
 namespace Triangle\Middleware;
 
 
-use localzet\Server\Protocols\Http\Request;
-use localzet\Server\Protocols\Http\Response;
-
 /**
  * Участник обработки запроса и ответа сервера.
  *
@@ -50,5 +47,5 @@ interface MiddlewareInterface
      * делегировать это предоставленному обработчику запросов.
      *
      */
-    public function process(Request $request, callable $handler): Response;
+    public function process($request, callable $handler);
 }
