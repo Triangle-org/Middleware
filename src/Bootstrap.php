@@ -29,6 +29,7 @@ namespace Triangle\Middleware;
 use localzet\Server;
 use RuntimeException;
 use Triangle\Engine\BootstrapInterface;
+use Triangle\Engine\Plugin;
 use function array_merge;
 use function array_reverse;
 use function is_array;
@@ -51,21 +52,20 @@ class Bootstrap implements BootstrapInterface
             return;
         }
 
-        self::load(config('middleware', []));
-        self::load(['__static__' => config('static.middleware', [])]);
+        $config = config();
 
-        foreach (config('plugin', []) as $firm => $projects) {
-            foreach ($projects as $name => $project) {
-                if (!is_array($project) || $name === 'static') {
-                    continue;
-                }
-                self::load($project['middleware'] ?? []);
-                self::load(['__static__' => config("plugin.$firm.$name.static.middleware", [])]);
-            }
+        self::load($config['middleware'] ?? []);
+        self::load(['__static__' => $config['static']['middleware'] ?? []]);
 
-            self::load($projects['middleware'] ?? [], $firm);
-            self::load(['__static__' => config("plugin.$firm.static.middleware", [])], $firm);
-        }
+        Plugin::app_reduce(function ($plugin, $config) {
+            self::load($config['middleware'] ?? []);
+            self::load(['__static__' => $config['static']['middleware'] ?? []], $plugin);
+        });
+
+        Plugin::plugin_reduce(function ($vendor, $plugins, $plugin, $config) {
+            self::load($config['middleware'] ?? []);
+            self::load(['__static__' => $config['static']['middleware'] ?? []]);
+        });
     }
 
     /**
@@ -85,7 +85,7 @@ class Bootstrap implements BootstrapInterface
             if ($app === '@') {
                 $plugin = '';
             }
-            if (str_contains($app, 'plugin.')) {
+            if (str_contains($app, config('app.plugin_alias', 'plugin') . '.')) {
                 $explode = explode('.', $app, 4);
                 $plugin = $explode[1];
                 $app = $explode[2] ?? '';
