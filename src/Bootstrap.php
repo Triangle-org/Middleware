@@ -27,6 +27,7 @@
 namespace Triangle\Middleware;
 
 use localzet\Server;
+use ReflectionClass;
 use RuntimeException;
 use Triangle\Engine\BootstrapInterface;
 use Triangle\Engine\Plugin;
@@ -108,17 +109,31 @@ class Bootstrap implements BootstrapInterface
      * @param bool $withGlobal Флаг, указывающий, включать ли глобальное промежуточное ПО
      * @return array Массив промежуточного ПО
      */
-    public static function getMiddleware(string $plugin, string $app, bool $withGlobal = true): array
+    public static function getMiddleware(string $plugin, string $app, string $controller, bool $withGlobal = true): array
     {
         // Глобальное промежуточное ПО
-        $globalMiddleware = static::$instances['']['@'] ?? [];
+        $globalMiddleware = $withGlobal ? static::$instances['']['@'] ?? [] : [];
         $appGlobalMiddleware = $withGlobal && isset(static::$instances[$plugin]['']) ? static::$instances[$plugin][''] : [];
 
+        $controllerMiddleware = [];
+        if ($controller && class_exists($controller)) {
+            $reflectionClass = new ReflectionClass($controller);
+            if ($reflectionClass->hasProperty('middleware')) {
+                $defaultProperties = $reflectionClass->getDefaultProperties();
+                $controllerMiddlewareClasses = $defaultProperties['middleware'];
+                foreach ((array)$controllerMiddlewareClasses as $className) {
+                    if (method_exists($className, 'process')) {
+                        $controllerMiddleware[] = [$className, 'process'];
+                    }
+                }
+            }
+        }
+
         if ($app === '') {
-            return array_reverse(array_merge($globalMiddleware, $appGlobalMiddleware));
+            return array_reverse(array_merge($globalMiddleware, $appGlobalMiddleware, $controllerMiddleware));
         }
         // Промежуточное ПО для приложения
         $appMiddleware = static::$instances[$plugin][$app] ?? [];
-        return array_reverse(array_merge($globalMiddleware, $appGlobalMiddleware, $appMiddleware));
+        return array_reverse(array_merge($globalMiddleware, $appGlobalMiddleware, $appMiddleware, $controllerMiddleware));
     }
 }
