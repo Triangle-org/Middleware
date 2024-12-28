@@ -59,12 +59,12 @@ class Bootstrap implements BootstrapInterface
         self::load(['__static__' => $config['static']['middleware'] ?? []]);
 
         Plugin::app_reduce(function ($plugin, $config) {
-            self::load($config['middleware'] ?? []);
+            self::load($config['middleware'] ?? [], $plugin);
             self::load(['__static__' => $config['static']['middleware'] ?? []], $plugin);
         });
 
         Plugin::plugin_reduce(function ($vendor, $plugins, $plugin, $config) {
-            self::load($config['middleware'] ?? []);
+            self::load($config['middleware'] ?? [], $plugin);
             self::load(['__static__' => $config['static']['middleware'] ?? []]);
         });
     }
