@@ -26,11 +26,16 @@
 
 namespace Triangle\Middleware;
 
+use ReflectionAttribute;
+use Closure;
 use localzet\Server;
 use ReflectionClass;
+use ReflectionMethod;
 use RuntimeException;
+use Triangle\Annotation\Middleware;
 use Triangle\Engine\BootstrapInterface;
 use Triangle\Engine\Plugin;
+use Triangle\Router\RouteObject;
 use function array_merge;
 use function array_reverse;
 use function is_array;
@@ -109,31 +114,58 @@ class Bootstrap implements BootstrapInterface
      * @param bool $withGlobal Флаг, указывающий, включать ли глобальное промежуточное ПО
      * @return array Массив промежуточного ПО
      */
-    public static function getMiddleware(string $plugin, string $app, string $controller, bool $withGlobal = true): array
+    public static function getMiddleware(string $plugin, string $app, string|array|Closure $controller, RouteObject|null $route, bool $withGlobal = true): array
     {
+        $isController = is_array($controller) && is_string($controller[0]);
+
         // Глобальное промежуточное ПО
         $globalMiddleware = $withGlobal ? static::$instances['']['@'] ?? [] : [];
         $appGlobalMiddleware = $withGlobal && isset(static::$instances[$plugin]['']) ? static::$instances[$plugin][''] : [];
 
-        $controllerMiddleware = [];
-        if ($controller && class_exists($controller)) {
-            $reflectionClass = new ReflectionClass($controller);
+        $middlewares = $routeMiddlewares = [];
+        if ($route) {
+            foreach (array_reverse($route->getMiddleware()) as $className) {
+                $routeMiddlewares[] = [$className, 'process'];
+            }
+        }
+        if ($isController && $controller[0] && class_exists($controller[0])) {
+            $reflectionClass = new ReflectionClass($controller[0]);
+            self::prepareAttributeMiddlewares($middlewares, $reflectionClass);
             if ($reflectionClass->hasProperty('middleware')) {
                 $defaultProperties = $reflectionClass->getDefaultProperties();
-                $controllerMiddlewareClasses = $defaultProperties['middleware'];
-                foreach ((array)$controllerMiddlewareClasses as $className) {
-                    if (method_exists($className, 'process')) {
-                        $controllerMiddleware[] = [$className, 'process'];
-                    }
+                $middlewaresClasses = $defaultProperties['middleware'];
+                foreach ((array)$middlewaresClasses as $className) {
+                    $middlewares[] = [$className, 'process'];
                 }
             }
+
+            $middlewares = array_merge($middlewares, $routeMiddlewares);
+            if ($reflectionClass->hasMethod($controller[1])) {
+                self::prepareAttributeMiddlewares($middlewares, $reflectionClass->getMethod($controller[1]));
+            }
+        } else {
+            $middlewares = array_merge($middlewares, $routeMiddlewares);
         }
 
         if ($app === '') {
-            return array_reverse(array_merge($globalMiddleware, $appGlobalMiddleware, $controllerMiddleware));
+            return array_reverse(array_merge($globalMiddleware, $appGlobalMiddleware, $middlewares));
         }
         // Промежуточное ПО для приложения
         $appMiddleware = static::$instances[$plugin][$app] ?? [];
-        return array_reverse(array_merge($globalMiddleware, $appGlobalMiddleware, $appMiddleware, $controllerMiddleware));
+        return array_reverse(array_merge($globalMiddleware, $appGlobalMiddleware, $appMiddleware, $middlewares));
+    }
+
+    /**
+     * @param array $middlewares
+     * @param ReflectionClass|ReflectionMethod $reflection
+     * @return void
+     */
+    private static function prepareAttributeMiddlewares(array &$middlewares, ReflectionClass|ReflectionMethod $reflection): void
+    {
+        $middlewareAttributes = $reflection->getAttributes(Middleware::class, ReflectionAttribute::IS_INSTANCEOF);
+        foreach ($middlewareAttributes as $middlewareAttribute) {
+            $middlewareAttributeInstance = $middlewareAttribute->newInstance();
+            $middlewares = array_merge($middlewares, $middlewareAttributeInstance->getMiddlewares());
+        }
     }
 }
