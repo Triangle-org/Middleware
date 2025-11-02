@@ -27,9 +27,9 @@
     }
   },
   "require": {
-    "php": ">=8",
-    "triangle/router": ">=2",
-    "triangle/engine": ">=8"
+    "php": "^8.1",
+    "triangle/router": "^2.0",
+    "triangle/engine": "^8.1"
   },
   "suggest": {
   }
