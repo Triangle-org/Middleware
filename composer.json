@@ -32,5 +32,10 @@
     "triangle/engine": "^8.1"
   },
   "suggest": {
+  },
+  "config": {
+    "platform": {
+      "php": "8.1.0"
+    }
   }
 }
