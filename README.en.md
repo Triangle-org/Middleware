@@ -13,7 +13,7 @@ HTTP request middleware support for Triangle applications. This package provides
 - `triangle/router` `^2.0`.
 - The current source branch declares `triangle/engine` `^8.1 || ^9.0`.
 
-Engine 9 does not yet have a stable tag. A constraint in the source branch does not establish that a stable package release supporting Engine 9 is published. Check the resolved Composer versions with `composer show triangle/middleware triangle/engine`.
+Triangle Engine 9 has a stable `9.0.0` release, published on November 20, 2026. Middleware's `^8.1 || ^9.0` constraint allows Engine 8.1 up to 9.0 and Engine 9.x. Check the versions actually selected by Composer with `composer show triangle/middleware triangle/engine`.
 
 ## Installation
 
@@ -70,17 +70,20 @@ Global middleware can be omitted for an individual lookup with `withGlobal: fals
 
 ## Tests and verification limits
 
-This repository has no test directory, PHPUnit development dependency, or Composer test script. Its GitHub Actions workflow validates the Composer manifest, installs dependencies, and runs `php -l` on PHP files. The test step reports that no test script is declared. These checks do not verify middleware behavior across a complete HTTP request.
+`composer test` runs the middleware bootstrap regression suite. It covers registration order and scope for global, plugin and app middleware, `withGlobal: false`, and errors for invalid configuration. `composer lint` checks PHP syntax in source and test files.
 
-To run the same basic checks locally, use the workflow commands:
+GitHub Actions runs both checks on PHP 8.1 and 8.5. This library does not track `composer.lock`, so each CI run resolves versions within the constraints in `composer.json`. The tests cover bootstrap behavior and the prepared handler list; they do not exercise a complete HTTP request through Triangle HTTP.
+
+Run the local checks with:
 
 ```sh
+composer update --prefer-dist --no-interaction --no-progress
 composer validate --no-check-publish --no-interaction
-composer install --prefer-dist --no-interaction --no-progress --no-scripts
-find . -path './vendor' -prune -o -path './.git' -prune -o -name '*.php' -type f -print0 | xargs -0 -n1 php -l
+composer lint
+composer test
 ```
 
-Run integration checks in an application using the Engine and HTTP component versions that it actually installs.
+For HTTP-level behavior, use integration tests in an application with its installed Engine and HTTP component versions.
 
 ## License
 
