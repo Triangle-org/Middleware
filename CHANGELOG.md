@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.3] - 2026-11-20
+
+### Changed
+- Support Triangle Engine `^8.1 || ^9.0` while retaining Router `^2.0`.
+
+### Compatibility
+- No Middleware runtime API changes. PHP `^8.1` remains required.
+
 ## [1.0.0] - 2025-01-XX - LTS Release
 
 ### Added
