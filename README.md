@@ -13,7 +13,7 @@
 - `triangle/router` версии `^2.0`.
 - Текущая исходная ветка объявляет `triangle/engine` `^8.1 || ^9.0`.
 
-Engine 9 пока не имеет стабильного тега. Ограничение в исходниках не подтверждает наличие опубликованного стабильного пакета с поддержкой Engine 9. Проверяйте разрешённые Composer версии командой `composer show triangle/middleware triangle/engine`.
+Стабильный Triangle Engine 9 опубликован как версия `9.0.0` 20 ноября 2026 года. Ограничение Middleware `^8.1 || ^9.0` разрешает Engine 8.1+ до 9.0 и Engine 9.x. Фактически выбранные версии проверяйте командой `composer show triangle/middleware triangle/engine`.
 
 ## Установка
 
@@ -70,17 +70,20 @@ Bootstrap также считывает глобальную конфигура�
 
 ## Проверки и ограничения тестирования
 
-В этом репозитории нет каталога тестов, dev-зависимости PHPUnit или Composer script для тестирования. Workflow GitHub Actions проверяет манифест Composer, устанавливает зависимости и выполняет `php -l` для PHP-файлов; шаг тестов сообщает, что скрипт не объявлен. Эти проверки не подтверждают поведение middleware в полном HTTP-запросе.
+`composer test` запускает regression suite загрузчика middleware. Проверяются порядок и область действия global, plugin и app middleware, параметр `withGlobal: false`, а также ошибки некорректной конфигурации. `composer lint` проверяет синтаксис PHP в исходниках и тестах.
 
-Для локальной проверки тех же базовых условий используйте команды из CI:
+GitHub Actions выполняет эти проверки на PHP 8.1 и 8.5. Поскольку это библиотека, `composer.lock` не хранится в репозитории: каждый CI запуск разрешает версии по ограничениям `composer.json`. Тесты проверяют загрузчик и список обработчиков; полный цикл HTTP-запроса с Triangle HTTP здесь не запускается.
+
+Локальный запуск:
 
 ```sh
+composer update --prefer-dist --no-interaction --no-progress
 composer validate --no-check-publish --no-interaction
-composer install --prefer-dist --no-interaction --no-progress --no-scripts
-find . -path './vendor' -prune -o -path './.git' -prune -o -name '*.php' -type f -print0 | xargs -0 -n1 php -l
+composer lint
+composer test
 ```
 
-Запускайте интеграционные проверки в приложении с теми версиями Engine и HTTP-компонента, которые использует проект.
+Для проверки фактического HTTP-вызова используйте интеграционные тесты приложения с установленными версиями Engine и HTTP-компонента.
 
 ## Лицензия
 

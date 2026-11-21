@@ -2,7 +2,6 @@ name: PHP package checks
 
 on:
   push:
-    branches: [main, master]
   pull_request:
     branches: [main, master]
   workflow_dispatch:
@@ -34,11 +33,11 @@ jobs:
       - name: Validate Composer manifest and lock
         run: composer validate --no-check-publish --no-interaction
 
-      - name: Install locked dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress --no-scripts
+      - name: Resolve and install allowed dependencies
+        run: composer update --prefer-dist --no-interaction --no-progress --no-scripts
 
       - name: Check PHP syntax
-        run: find . -path './vendor' -prune -o -path './.git' -prune -o -name '*.php' -type f -print0 | xargs -0 -n1 php -l
+        run: composer lint --no-interaction
 
       - name: Run declared tests
         shell: bash
